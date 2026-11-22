@@ -1,0 +1,29 @@
+# Firebase cache and local configuration
+.firebase/
+.runtimeconfig.json
+
+# Firebase debug logs
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+firestore-debug.*.log
+ui-debug.log
+ui-debug.*.log
+pubsub-debug.log
+pubsub-debug.*.log
+database-debug.log
+database-debug.*.log
+storage-debug.log
+storage-debug.*.log
+*-debug.log
+
+# Environment and credentials
+.env
+.env.local
+.env.*.local
+*firebase-adminsdk*.json
+serviceAccountKey.json
+
+# Dependencies (e.g. Cloud Functions)
+node_modules/
+functions/node_modules/
