@@ -5,6 +5,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Óraiskola – Tanulj meg órát olvasni!</title>
+  <meta name="description" content="Játékos, interaktív analógóra-oktató alkalmazás gyerekeknek.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="hu_HU">
+  <meta property="og:title" content="Óraiskola – Tanulj meg órát olvasni!">
+  <meta property="og:description" content="Játékos, interaktív analógóra-oktató alkalmazás gyerekeknek.">
+  <meta property="og:image" content="https://tanulj-jatszva.web.app/og-1200x630.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Óraiskola: egy analóg óra három órát mutat.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://tanulj-jatszva.web.app/og-1200x630.png">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="48x48" href="/icon-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/icon-96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
   <style>
     :root {
       --ink: #17203d;
@@ -448,9 +464,19 @@
     }
     function updateLearn() { draw(document.querySelector('#learnClock svg'), learn, 'learn'); document.querySelector('#learnTime').textContent = timeText(learn); document.querySelector('#learnWords').textContent = words(learn); let mi = learn.m; document.querySelector('#explanation').innerHTML = `A <b>hosszú, kék</b> mutató a perceket mutatja: most <b>${mi}</b>-n áll. A <b>rövid, rózsaszín</b> mutató az órák között is lassan halad: ezért pontosan követi a perceket.` }
     function updatePractice() { draw(document.querySelector('#practiceClock svg'), practice, 'practice') }
-    function point(e, wrap) { let r = wrap.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 500, y = (e.clientY - r.top) / r.height * 500; return Math.atan2(x - 250, 250 - y) * 180 / Math.PI }
+    function coords(e, wrap) { let rect = wrap.getBoundingClientRect(), dx = (e.clientX - rect.left) / rect.width * 500 - 250, dy = (e.clientY - rect.top) / rect.height * 500 - 250; return { dx, dy, r: Math.hypot(dx, dy), a: Math.atan2(dx, -dy) * 180 / Math.PI } }
+    function point(e, wrap) { return coords(e, wrap).a }
+    function pickHand(c, t) {
+      let ma = t.m * 6, ha = (t.h % 12) * 30 + t.m * .5;
+      let dif = (a, b) => Math.abs((((a - b) + 180) % 360 + 360) % 360 - 180);
+      if (dif(ma, ha) <= 14) return c.r <= 120 ? 'hour' : 'minute';
+      let seg = (len, deg) => { let rad = deg * Math.PI / 180, ux = Math.sin(rad), uy = -Math.cos(rad), p = Math.max(0, Math.min(len, c.dx * ux + c.dy * uy)); return Math.hypot(c.dx - p * ux, c.dy - p * uy) };
+      let dm = seg(163, ma), dh = seg(113, ha);
+      if (Math.min(dm, dh) < 22) return dm < dh ? 'minute' : 'hour';
+      return dif(c.a, ma) < dif(c.a, ha) ? 'minute' : 'hour';
+    }
     function setFrom(angle, kind, key) { let old = key === 'learn' ? learn : practice; if (kind === 'minute') { let m = Math.round(((angle + 360) % 360) / 6) % 60, d = m - old.m; if (d < -30) old.h = (old.h % 12) + 1; else if (d > 30) old.h = ((old.h + 10) % 12) + 1; old.m = m } else { let h = Math.round(((angle - old.m * .5 + 360) % 360) / 30) % 12; old.h = h || 12 } key === 'learn' ? updateLearn() : updatePractice() }
-    document.querySelectorAll('.clock-wrap').forEach(w => { w.addEventListener('pointerdown', e => { let key = w.id === 'learnClock' ? 'learn' : 'practice', a = point(e, w), t = key === 'learn' ? learn : practice; let ma = t.m * 6, ha = (t.h % 12) * 30 + t.m * .5; let dif = (a, b) => Math.abs((((a - b) + 180) % 360 + 360) % 360 - 180); drag = { w, key, kind: dif(a, ma) < dif(a, ha) ? 'minute' : 'hour' }; w.setPointerCapture(e.pointerId); setFrom(a, drag.kind, key) }); w.addEventListener('pointermove', e => { if (drag && drag.w === w) setFrom(point(e, w), drag.kind, drag.key) }); w.addEventListener('pointerup', () => drag = null); w.addEventListener('pointercancel', () => drag = null) });
+    document.querySelectorAll('.clock-wrap').forEach(w => { w.addEventListener('pointerdown', e => { let key = w.id === 'learnClock' ? 'learn' : 'practice', c = coords(e, w), t = key === 'learn' ? learn : practice; drag = { w, key, kind: pickHand(c, t) }; w.setPointerCapture(e.pointerId); setFrom(c.a, drag.kind, key) }); w.addEventListener('pointermove', e => { if (drag && drag.w === w) setFrom(point(e, w), drag.kind, drag.key) }); w.addEventListener('pointerup', () => drag = null); w.addEventListener('pointercancel', () => drag = null) });
     function newTask() { let type = document.querySelector('#level').value, step = { hour: 60, half: 30, quarter: 15, five: 5, minute: 1 }[type], total = Math.floor(Math.random() * (720 / step)) * step; target = { h: Math.floor(total / 60) % 12 || 12, m: total % 60 }; practice = { h: 12, m: 0 }; updatePractice(); document.querySelector('#targetTime').textContent = timeText(target); document.querySelector('#taskWords').textContent = words(target); document.querySelector('#result').textContent = ''; document.querySelector('#taskTitle').textContent = 'Állítsd be az időt!' }
     function check() { let right = practice.h % 12 === target.h % 12 && practice.m === target.m, box = document.querySelector('#result'); if (right) { score += 10 + Math.min(streak, 5) * 2; streak++; box.textContent = '🎉 Szuper! Pontosan beállítottad!'; box.style.color = '#087d57'; setTimeout(newTask, 850) } else { streak = 0; box.textContent = `Még nem egészen. Nézd meg újra: ${words(target)}.`; box.style.color = '#c0395b' } document.querySelector('#score').textContent = score; document.querySelector('#streak').textContent = streak; document.querySelector('#stars').textContent = '★'.repeat(Math.min(3, Math.ceil(streak / 2))) + '☆'.repeat(3 - Math.min(3, Math.ceil(streak / 2))) }
     document.querySelectorAll('.tab').forEach(b => b.onclick = () => { document.querySelectorAll('.tab,.panel').forEach(x => x.classList.remove('active')); b.classList.add('active'); document.querySelector('#' + b.dataset.tab).classList.add('active') }); document.querySelector('#resetLearn').onclick = () => { learn = { h: 3, m: 0 }; updateLearn() }; document.querySelector('#randomLearn').onclick = () => { let n = Math.floor(Math.random() * 720); learn = { h: Math.floor(n / 60) % 12 || 12, m: n % 60 }; updateLearn() }; document.querySelector('#newTask').onclick = newTask; document.querySelector('#check').onclick = check; document.querySelector('#level').onchange = newTask; updateLearn(); newTask();
