@@ -481,20 +481,6 @@
     function check() { let right = practice.h % 12 === target.h % 12 && practice.m === target.m, box = document.querySelector('#result'); if (right) { score += 10 + Math.min(streak, 5) * 2; streak++; box.textContent = '🎉 Szuper! Pontosan beállítottad!'; box.style.color = '#087d57'; setTimeout(newTask, 850) } else { streak = 0; box.textContent = `Még nem egészen. Nézd meg újra: ${words(target)}.`; box.style.color = '#c0395b' } document.querySelector('#score').textContent = score; document.querySelector('#streak').textContent = streak; document.querySelector('#stars').textContent = '★'.repeat(Math.min(3, Math.ceil(streak / 2))) + '☆'.repeat(3 - Math.min(3, Math.ceil(streak / 2))) }
     document.querySelectorAll('.tab').forEach(b => b.onclick = () => { document.querySelectorAll('.tab,.panel').forEach(x => x.classList.remove('active')); b.classList.add('active'); document.querySelector('#' + b.dataset.tab).classList.add('active') }); document.querySelector('#resetLearn').onclick = () => { learn = { h: 3, m: 0 }; updateLearn() }; document.querySelector('#randomLearn').onclick = () => { let n = Math.floor(Math.random() * 720); learn = { h: Math.floor(n / 60) % 12 || 12, m: n % 60 }; updateLearn() }; document.querySelector('#newTask').onclick = newTask; document.querySelector('#check').onclick = check; document.querySelector('#level').onchange = newTask; updateLearn(); newTask();
   </script>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
-
-    const firebaseConfig = {
-      apiKey: "REMOVED_API_KEY",
-      authDomain: "tanulj-jatszva.firebaseapp.com",
-      projectId: "tanulj-jatszva",
-      storageBucket: "tanulj-jatszva.firebasestorage.app",
-      messagingSenderId: "1016624039757",
-      appId: "1:1016624039757:web:34e8b85de3628704b89904"
-    };
-
-    window.firebaseApp = initializeApp(firebaseConfig);
-  </script>
 </body>
 
 </html>
